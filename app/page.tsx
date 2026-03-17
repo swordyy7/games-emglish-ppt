@@ -373,28 +373,58 @@ const parseMarkdown = (text: string): Slide[] => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentSlide, currentWordIndex, currentPhraseIndex, showVocabulary, showTranslation, slides]);
 
-  // iOS touch controls - detect iPad/iPhone and handle tap
+  // Click and touch controls - handle all device clicks like Enter key
   useEffect(() => {
-    // Check if device is iOS (iPad or iPhone)
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
-    if (!isIOS) return;
+    let lastTapTime = 0;
+    const TAP_DELAY = 300; // Prevent multiple taps in quick succession
 
-    const handleClick = (e: MouseEvent) => {
-      // Ignore clicks on buttons and interactive elements
+    const handleTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.closest('button')) {
+      // Ignore touches on buttons and interactive elements
+      if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || 
+          target.closest('button') || target.closest('input')) {
         return;
       }
-      
+
+      // Debounce to prevent multiple rapid taps
+      const now = Date.now();
+      if (now - lastTapTime < TAP_DELAY) {
+        return;
+      }
+      lastTapTime = now;
+
       e.preventDefault();
       showNextWord();
     };
 
-    // Add click listener
+    // Also handle click events as a fallback
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Ignore clicks on buttons and interactive elements
+      if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || 
+          target.closest('button') || target.closest('input')) {
+        return;
+      }
+
+      // Debounce to prevent multiple rapid clicks
+      const now = Date.now();
+      if (now - lastTapTime < TAP_DELAY) {
+        return;
+      }
+      lastTapTime = now;
+
+      e.preventDefault();
+      showNextWord();
+    };
+
+    // Add both touch and click listeners
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
     window.addEventListener('click', handleClick);
     
-    return () => window.removeEventListener('click', handleClick);
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('click', handleClick);
+    };
   }, [currentSlide, currentWordIndex, currentPhraseIndex, showVocabulary, showTranslation, slides]);
 
   // Get processed text with highlights
