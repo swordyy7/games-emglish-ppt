@@ -373,59 +373,17 @@ const parseMarkdown = (text: string): Slide[] => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentSlide, currentWordIndex, currentPhraseIndex, showVocabulary, showTranslation, slides]);
 
-  // Click and touch controls - handle all device clicks like Enter key
-  useEffect(() => {
-    let lastTapTime = 0;
-    const TAP_DELAY = 300; // Prevent multiple taps in quick succession
-
-    const handleTouchStart = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      // Ignore touches on buttons and interactive elements
-      if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || 
-          target.closest('button') || target.closest('input')) {
-        return;
-      }
-
-      // Debounce to prevent multiple rapid taps
-      const now = Date.now();
-      if (now - lastTapTime < TAP_DELAY) {
-        return;
-      }
-      lastTapTime = now;
-
-      e.preventDefault();
-      showNextWord();
-    };
-
-    // Also handle click events as a fallback
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Ignore clicks on buttons and interactive elements
-      if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || 
-          target.closest('button') || target.closest('input')) {
-        return;
-      }
-
-      // Debounce to prevent multiple rapid clicks
-      const now = Date.now();
-      if (now - lastTapTime < TAP_DELAY) {
-        return;
-      }
-      lastTapTime = now;
-
-      e.preventDefault();
-      showNextWord();
-    };
-
-    // Add both touch and click listeners
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('click', handleClick);
-    
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('click', handleClick);
-    };
-  }, [currentSlide, currentWordIndex, currentPhraseIndex, showVocabulary, showTranslation, slides]);
+  // Handle click on container
+  const handleContainerClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    // Ignore clicks on buttons and interactive elements
+    if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || 
+        target.closest('button') || target.closest('input')) {
+      return;
+    }
+    e.preventDefault();
+    showNextWord();
+  };
 
   // Get processed text with highlights
   const getProcessedText = (text: string, words: Word[], wordIndex: number) => {
@@ -449,6 +407,7 @@ const parseMarkdown = (text: string): Slide[] => {
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
+      onClick={handleContainerClick}
     >
       {/* Background overlay - semi-transparent black mask */}
       {backgroundImage && (
