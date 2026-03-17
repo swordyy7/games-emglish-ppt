@@ -373,6 +373,30 @@ const parseMarkdown = (text: string): Slide[] => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentSlide, currentWordIndex, currentPhraseIndex, showVocabulary, showTranslation, slides]);
 
+  // iOS touch controls - detect iPad/iPhone and handle tap
+  useEffect(() => {
+    // Check if device is iOS (iPad or iPhone)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    if (!isIOS) return;
+
+    const handleClick = (e: MouseEvent) => {
+      // Ignore clicks on buttons and interactive elements
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.closest('button')) {
+        return;
+      }
+      
+      e.preventDefault();
+      showNextWord();
+    };
+
+    // Add click listener
+    window.addEventListener('click', handleClick);
+    
+    return () => window.removeEventListener('click', handleClick);
+  }, [currentSlide, currentWordIndex, currentPhraseIndex, showVocabulary, showTranslation, slides]);
+
   // Get processed text with highlights
   const getProcessedText = (text: string, words: Word[], wordIndex: number) => {
     let processed = text;
