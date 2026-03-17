@@ -45,7 +45,9 @@ export default function Presentation() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [showVocabulary, setShowVocabulary] = useState(true);
   const [isPhraseStage, setIsPhraseStage] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const backgroundImageInputRef = useRef<HTMLInputElement>(null);
 
   const currentSlide = slides[currentSlideIndex];
 
@@ -78,6 +80,19 @@ export default function Presentation() {
       setCurrentWordIndex(0);
     };
     reader.readAsText(file);
+  };
+
+  // Handle background image upload
+  const handleBackgroundImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      setBackgroundImage(imageUrl);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Parse markdown file
@@ -371,7 +386,26 @@ const parseMarkdown = (text: string): Slide[] => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10 font-['Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif]">
+    <div 
+      className="min-h-screen text-white flex flex-col items-center justify-center p-10 font-['Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif] relative overflow-hidden"
+      style={{
+        backgroundColor: 'black',
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Background overlay - semi-transparent black mask */}
+      {backgroundImage && (
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+          }}
+        />
+      )}
+      
       {/* File Upload Section - Only show when no slides loaded */}
       {slides.length === 0 && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 p-3 bg-[#1A1A1A] rounded-full border border-[#333333] shadow-lg">
@@ -390,6 +424,23 @@ const parseMarkdown = (text: string): Slide[] => {
             <span>选择 Markdown 文件</span>
           </button>
           <span className="text-gray-400 text-xs italic">{fileName}</span>
+          
+          <div className="h-6 w-[1px] bg-[#333333]"></div>
+          
+          <input
+            type="file"
+            ref={backgroundImageInputRef}
+            onChange={handleBackgroundImageUpload}
+            accept="image/*"
+            className="hidden"
+          />
+          <button
+            onClick={() => backgroundImageInputRef.current?.click()}
+            className="bg-[#FF9800] text-black px-4 py-2 rounded-full font-semibold hover:bg-[#F57C00] transition-all flex items-center gap-2 text-sm"
+          >
+            <span>🖼️</span>
+            <span>上传背景图</span>
+          </button>
         </div>
       )}
 
@@ -416,7 +467,7 @@ const parseMarkdown = (text: string): Slide[] => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
             transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1.0] }}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-10"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-10 relative z-10"
           >
             {/* Original Text */}
                       <div className="text-center">
@@ -454,7 +505,7 @@ const parseMarkdown = (text: string): Slide[] => {
           // Vocabulary state: Original text + vocabulary grid
           <motion.div
             key="vocabulary"
-            className="w-full h-[95vh] flex flex-col px-8"
+            className="w-full h-[95vh] flex flex-col px-8 relative z-10"
           >
             {/* Upper Section - Original Text & Translation */}
             <motion.div
