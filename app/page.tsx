@@ -44,6 +44,7 @@ export default function Presentation() {
   const [fileName, setFileName] = useState('未选择文件');
   const [showTranslation, setShowTranslation] = useState(false);
   const [showVocabulary, setShowVocabulary] = useState(true);
+  const [isPhraseStage, setIsPhraseStage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentSlide = slides[currentSlideIndex];
@@ -265,6 +266,11 @@ const parseMarkdown = (text: string): Slide[] => {
       return;
     }
 
+    // 进入固定搭配阶段
+    if (!isPhraseStage && currentSlide.phrases.length > 0) {
+      setIsPhraseStage(true);
+    }
+
     // 阶段2: 展示固定搭配
     if (currentPhraseIndex < currentSlide.phrases.length) {
       setCurrentPhraseIndex(prev => prev + 1);
@@ -285,6 +291,7 @@ const parseMarkdown = (text: string): Slide[] => {
       setCurrentPhraseIndex(0);
       setShowVocabulary(true);
       setShowTranslation(false);
+      setIsPhraseStage(false);
     }
   };
 
@@ -299,6 +306,11 @@ const parseMarkdown = (text: string): Slide[] => {
       if (currentWordIndex < currentSlide.words.length) {
         setCurrentWordIndex(prev => prev + 1);
         return;
+      }
+
+      // 进入固定搭配阶段
+      if (!isPhraseStage && currentSlide.phrases.length > 0) {
+        setIsPhraseStage(true);
       }
 
       // 阶段2: 展示固定搭配
@@ -321,6 +333,7 @@ const parseMarkdown = (text: string): Slide[] => {
         setCurrentPhraseIndex(0);
         setShowVocabulary(true);
         setShowTranslation(false);
+        setIsPhraseStage(false);
       } else {
         setIsAutoPlaying(false);
       }
@@ -513,15 +526,24 @@ const parseMarkdown = (text: string): Slide[] => {
                             {index < currentWordIndex && (
                               <motion.div
                                 initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
+                                animate={{
+                                  opacity: isPhraseStage
+                                    ? 0.4
+                                    : (index === currentWordIndex - 1 ? 1 : 0.4),
+                                  y: 0
+                                }}
                                 transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
                                 className="flex items-center gap-8"
                               >
-                                <div className="text-[48px] font-bold text-[#FF9800]">{word.word}</div>
-                                <div className="text-[40px] text-white font-['Source Code Pro','Courier New',monospace]">
-                                  {word.pronunciation} <span className="text-gray-400">{word.type}</span>
+                                <div className={`flex items-center gap-3 ${index === currentWordIndex - 1 ? 'flex-wrap' : 'whitespace-nowrap overflow-hidden'}`}>
+                                  <div className={`font-bold text-white shrink-0 ${index === currentWordIndex - 1 ? 'text-[48px]' : 'text-[32px]'}`}>{word.word}</div>
+                                  <span className={`rounded-full bg-[#D4AF37] shrink-0 ${index === currentWordIndex - 1 ? 'w-[10px] h-[10px]' : 'w-[7px] h-[7px]'}`}></span>
+                                  <div className={`font-['Helvetica Neue','Helvetica',Arial,sans-serif] shrink-0 ${index === currentWordIndex - 1 ? 'text-[32px] text-gray-400' : 'text-[21px] text-gray-400'}`}>
+                                    {word.pronunciation}
+                                  </div>
+                                  <span className={`rounded-full bg-[#D4AF37] shrink-0 ${index === currentWordIndex - 1 ? 'w-[10px] h-[10px]' : 'w-[7px] h-[7px]'}`}></span>
+                                  <div className={`${index === currentWordIndex - 1 ? 'text-[35px] text-[#D4AF37]' : 'text-[23px] text-[#D4AF37] truncate max-w-[200px]'}`}>{word.meaning}</div>
                                 </div>
-                                <div className="text-[40px] text-[#FF9800]">{word.meaning}</div>
                               </motion.div>
                             )}
                           </AnimatePresence>
@@ -537,12 +559,15 @@ const parseMarkdown = (text: string): Slide[] => {
                             {index < currentPhraseIndex && (
                               <motion.div
                                 initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
+                                animate={{ opacity: index === currentPhraseIndex - 1 ? 1 : 0.4, y: 0 }}
                                 transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1.0] }}
                                 className="flex items-center gap-8"
                               >
-                                <div className="text-[48px] font-bold text-[#FF9800]">{phrase.expression}</div>
-                                <div className="text-[40px] text-white">{phrase.meaning}</div>
+                                <div className={`flex items-center gap-3 ${index === currentPhraseIndex - 1 ? 'flex-wrap' : 'whitespace-nowrap overflow-hidden'}`}>
+                                  <div className={`font-bold text-white shrink-0 ${index === currentPhraseIndex - 1 ? 'text-[48px]' : 'text-[32px]'}`}>{phrase.expression}</div>
+                                  <span className={`rounded-full bg-[#D4AF37] shrink-0 ${index === currentPhraseIndex - 1 ? 'w-[10px] h-[10px]' : 'w-[7px] h-[7px]'}`}></span>
+                                  <div className={`${index === currentPhraseIndex - 1 ? 'text-[35px] text-[#D4AF37]' : 'text-[23px] text-[#D4AF37] truncate max-w-[200px]'}`}>{phrase.meaning}</div>
+                                </div>
                               </motion.div>
                             )}
                           </AnimatePresence>
