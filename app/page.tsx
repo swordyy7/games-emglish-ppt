@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { marked } from 'marked';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Word {
